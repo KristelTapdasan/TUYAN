@@ -92,9 +92,56 @@ public class config {
 
         } catch (SQLException e) {
             System.out.println("Error retrieving records: " + e.getMessage());
+        } 
+    }
+   public void viewSingleRecord(String qry, String[] headers, String[] columns, int bookingId) {
+    // Ensure that connection is established, you can either pass the connection here
+    try (Connection conn = this.connectDB(); 
+         PreparedStatement stmt = conn.prepareStatement(qry)) {
+        
+        stmt.setInt(1, bookingId); // Set the bookingId parameter
+
+        // Execute the query
+        try (ResultSet rs = stmt.executeQuery()) {
+
+            // Check if a record was returned
+            if (rs.next()) {
+                // Print the headers
+                for (String header : headers) {
+                    System.out.printf("%-20s", header);
+                }
+                System.out.println();
+
+                // Print the record data
+                for (int i = 0; i < columns.length; i++) {
+                    String columnName = columns[i];
+                    if (columnName.equals("c_fname c_lname")) {
+                        StringBuilder row = new StringBuilder("|| ");
+                        String fullName = rs.getString("c_fname") + " " + rs.getString("c_lname");
+                        System.out.printf("%-20s ", fullName);
+                    } else {
+                        // For other columns, get the data based on column name
+                        String value = rs.getString(columnName);
+                        if (value == null) {
+                            value = ""; // Handle null values
+                        }
+                        System.out.printf("%-20s", value);
+                    }
+                }
+                System.out.println();
+            } else {
+                System.out.println("No record found for Booking ID: " + bookingId);
+            }
         }
-    } 
-   
+
+    } catch (SQLException e) {
+        System.out.println("Error while fetching the record: " + e.getMessage());
+    }
+}
+
+
+
+    
 //-----------------------------------------------
     // UPDATE METHOD
     //-----------------------------------------------
@@ -201,4 +248,24 @@ public void deleteRecord(String sql, Object... values) {
         }
         return result;
     }
+
+   public String getStringValue(String query, int param) {
+    String result = "";
+    try (Connection conn = connectDB(); 
+         PreparedStatement psmt = conn.prepareStatement(query)) {
+
+        psmt.setInt(1, param); // Set the parameter in the query
+        try (ResultSet rs = psmt.executeQuery()) { // Use try-with-resources for ResultSet
+            if (rs.next()) {
+                result = rs.getString(1); // Get the first column of the result
+            }
+        }
+    } catch (SQLException e) {
+        System.out.println("Error while fetching value: " + e.getMessage());
     }
+    return result;
+}
+
+}
+
+    
